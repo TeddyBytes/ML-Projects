@@ -1,2 +1,2 @@
 # ML-Projects
-Colleciton of Machine Learning Projects
+Collection of my personal Machine Learning Projects
