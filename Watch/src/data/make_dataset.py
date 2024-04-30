@@ -40,13 +40,15 @@ rpe = match.group()
 # Read all files
 # --------------------------------------------------------------
 
-# Initialize variables
+# Initialize empty DataFrames to store ACC and GYR data
 all_acc_df = pd.DataFrame()
 all_gyr_df = pd.DataFrame()
+
+# Keep track of current set numbers for ACC and GYR data
 acc_curr_set = 1
 gyr_curr_set = 1
 
-# Iterate over files in folder
+# Iterate over each file in folder
 for file in files:
 
     # Extract features from filename
@@ -64,7 +66,7 @@ for file in files:
     else:
         rpe = None
 
-    # Read file
+    # Read data from current file
     df = pd.read_csv(file)
 
     # Add extracted features
