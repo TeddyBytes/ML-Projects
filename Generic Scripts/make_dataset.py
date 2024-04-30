@@ -1,38 +1,19 @@
 import pandas as pd
-import regex as re
 from glob import glob
 
 # --------------------------------------------------------------
 # Read single CSV file
 # --------------------------------------------------------------
-one_acc_data = pd.read_csv(
-    "../../data/raw/A-bench-heavy2-rpe8_MetaWear_2019-01-11T16.10.08.270_C42732BE255C_Accelerometer_12.500Hz_1.4.4.csv"
-)
-one_gyro_data = pd.read_csv(
-    "../../data/raw/A-bench-heavy2-rpe8_MetaWear_2019-01-11T16.10.08.270_C42732BE255C_Gyroscope_25.000Hz_1.4.4.csv"
-)
+
 
 # --------------------------------------------------------------
 # List all data in data/raw/MetaMotion
 # --------------------------------------------------------------
 
 
-data_path = "../../data/raw/*.csv"
-files = glob(data_path)
-
 # --------------------------------------------------------------
 # Extract features from filename
 # --------------------------------------------------------------
-
-exercise = files[0].split("-")[1]
-participant = files[0].split("-")[0][-1]
-difficulty = files[0].split("-")[2]
-
-rpe_pattern = r"rpe(\d)"
-match = re.search(rpe_pattern, files[0])
-# Will output none if no RPE is supplied
-rpe = match.group()
-
 
 
 # --------------------------------------------------------------
