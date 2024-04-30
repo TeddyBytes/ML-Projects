@@ -19,6 +19,7 @@ one_gyro_data = pd.read_csv(
 
 data_path = "../../data/raw/*.csv"
 files = glob(data_path)
+# files
 
 # --------------------------------------------------------------
 # Extract features from filename
@@ -26,13 +27,12 @@ files = glob(data_path)
 
 exercise = files[0].split("-")[1]
 participant = files[0].split("-")[0][-1]
-difficulty = files[0].split("-")[2]
+difficulty = files[0].split("-")[2].rstrip(1234567890)
 
 rpe_pattern = r"rpe(\d)"
 match = re.search(rpe_pattern, files[0])
 # Will output none if no RPE is supplied
 rpe = match.group()
-
 
 
 # --------------------------------------------------------------
