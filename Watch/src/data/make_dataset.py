@@ -73,7 +73,7 @@ def extract_features_from_title(file):
 
 
 # --------------------------------------------------------------
-# Read all files
+# Setup to read all files
 # --------------------------------------------------------------
 
 # Initialize empty DataFrames to store ACC and GYR data
@@ -196,10 +196,15 @@ def read_data_from_files(data_path):
             all_gyr_df = pd.concat([df, all_gyr_df])
     all_acc_df, all_gyr_df = process_sensor_timestamps(all_acc_df, all_gyr_df)
 
+    all_acc_df.set_index("time", inplace=True)
+    all_gyr_df.set_index("time", inplace=True)
+
     return all_acc_df, all_gyr_df
 
 
 acc_df, gyr_df = read_data_from_files(data_path)
+# merged = pd.concat(
+#         [acc_df, gyr_df], axis = 1)
 
 
 # --------------------------------------------------------------
@@ -207,7 +212,7 @@ acc_df, gyr_df = read_data_from_files(data_path)
 # --------------------------------------------------------------
 
 
-def merge_datasets(acc_df, gyr_df):
+def merge_datasets(accel_df, gyro_df):
     """
     Merges two data sets together, particularly Accelerometer and Gyroscope data.
 
@@ -218,22 +223,63 @@ def merge_datasets(acc_df, gyr_df):
     Returns:
         merged_df (pandas.DataFrame): Return merged dataframe, containing both Gyroscope and Accelerometer data.
     """
-    merged = pd.concat([acc_df, gyr_df])
-    duplicate_cols = ["difficulty", "exercise", "participant", "Set", "time"]
-    unique_df = merged.drop_duplicates(subset=duplicate_cols, keep="first")
+
+    merged = pd.concat([accel_df, gyro_df], axis=1)
+
+    unique_df = merged.loc[:, ~merged.columns.duplicated()]
+
+    unique_df.columns = [
+        "acc_x",
+        "acc_y",
+        "acc_z",
+        "difficulty",
+        "exercise",
+        "participant",
+        "set",
+        "gyr_x",
+        "gyr_y",
+        "gyr_z",
+    ]
 
     return unique_df
 
 
 final_df = merge_datasets(acc_df, gyr_df)
 
+
 # --------------------------------------------------------------
 # Resample data (frequency conversion)
+
 # --------------------------------------------------------------
 
-# Accelerometer:    12.500HZ
-# Gyroscope:        25.000Hz
+# Define a dictionary to specify how to aggregate each sensor data column
+samples = {
+    "acc_x": "mean",
+    "acc_y": "mean",
+    "acc_z": "mean",
+    "difficulty": "last",
+    "exercise": "last",
+    "participant": "last",
+    "set": "last",
+    "gyr_x": "mean",
+    "gyr_y": "mean",
+    "gyr_z": "mean",
+}
 
+# Group  DataFrame by day using a daily frequency grouper
+days = [g for n, g in final_df.groupby(pd.Grouper(freq="D"))]
+
+data_resampled = pd.DataFrame()
+
+# Resample each DataFrame within df to 200 milliseconds intervals
+for df in days:
+
+    resampled_group = df.resample(rule="200ms").apply(samples).dropna()
+    data_resampled = pd.concat([data_resampled, resampled_group])
+
+# Save processed DF to Interim Folder
+save_path = "../../data/interim/01_data_processed.pkl"
+data_resampled.to_pickle(save_path)
 
 # --------------------------------------------------------------
 # Export dataset
