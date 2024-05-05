@@ -53,7 +53,7 @@ def extract_features_from_title(file):
     exercise = file.split("-")[1]
     participant = file.split("-")[0][-1]
     difficulty = file.split("-")[2].rstrip("1234567890")
-    difficulty = difficulty.split("_")[0]
+    difficulty = difficulty.split("_")[0].rstrip("1234567890")
 
     # Extract RPE as rate
     if "rpe" in file:
@@ -203,6 +203,8 @@ def read_data_from_files(data_path):
 
 
 acc_df, gyr_df = read_data_from_files(data_path)
+acc_df["difficulty"].value_counts()
+gyr_df["difficulty"].value_counts()
 # merged = pd.concat(
 #         [acc_df, gyr_df], axis = 1)
 
@@ -245,6 +247,7 @@ def merge_datasets(accel_df, gyro_df):
 
 
 final_df = merge_datasets(acc_df, gyr_df)
+final_df["difficulty"].value_counts()
 
 
 # --------------------------------------------------------------
@@ -277,6 +280,9 @@ for df in days:
     resampled_group = df.resample(rule="200ms").apply(samples).dropna()
     data_resampled = pd.concat([data_resampled, resampled_group])
 
+
+data_resampled["set"] = data_resampled["set"].astype(int)
+data_resampled["difficulty"].value_counts()
 # Save processed DF to Interim Folder
 save_path = "../../data/interim/01_data_processed.pkl"
 data_resampled.to_pickle(save_path)
