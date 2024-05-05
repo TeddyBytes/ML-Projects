@@ -109,38 +109,44 @@ plt.show()
 # --------------------------------------------------------------
 
 
+
+
+
+# --------------------------------------------------------------
+# Compare participants
+# --------------------------------------------------------------
+
 exercises = df["exercise"].unique()
 difficulties = df["difficulty"].value_counts()
 # Create the figure and subplots
 
 sensor_cols = ["acc_x", "acc_y", "acc_z", "gyr_x", "gyr_y", "gyr_z"]
 
-fig, axs = plt.subplots(nrows=2, ncols=3, figsize=(25, 8))
+# For each sensor column
+for sensor in sensor_cols:
+    # Create the figure and subplots
+    fig, axs = plt.subplots(nrows=2, ncols=3, figsize=(25, 8))
+    
+    # Iterate over exercises and plot grouped data on each subplot
+    for ax, exercise in zip(axs.flat, exercises):
+        # Filter dataframe for the current exercise
+        selected_df = df[df['exercise'] == exercise].sort_values('participant').reset_index()
+        
+        # Group by participant
+        grouped_df = selected_df.groupby('participant')
+        
+        # Plot the grouped data on the current subplot
+        for participant, group_data in grouped_df:
+            ax.plot(group_data.index, group_data[sensor], label=f'Participant: {participant}')
+        
+        ax.set_ylabel(sensor)
+        ax.set_xlabel('Sample time')
+        ax.set_title(f"Exercise: {exercise}")
+        ax.legend()  # Add legend for participants
+        
+    plt.suptitle(sensor)
 
-# For each of the exercises plot the sensor data and notate difficulty of set.
-for exercise in exercise:
-    fig, axs = plt.subplots(nrows=3, ncols=4, figsize=(25, 8))
-    category_df = (
-        df.query("exercise == 'squat'").sort_values("participant").reset_index()
-    )
-
-    for i, sensor in enumerate(sensor_cols):
-        plt.legend()
-        category_df.groupby(["difficulty"])["acc_y"].plot()
-
-
-category_df = df.query("exercise == 'exercise'")
-
-category_df.groupby(["difficulty"])["acc_y"].plot()
-medium = df.query("difficulty == 'medium'")
-heavy = df.query("difficulty == 'heavy'")
-
-df.groupby(["difficulty"])["acc_y"].plot()
-
-# --------------------------------------------------------------
-# Compare participants
-# --------------------------------------------------------------
-
+plt.show()
 
 # --------------------------------------------------------------
 # Plot multiple axis
