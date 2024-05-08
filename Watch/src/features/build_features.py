@@ -4,6 +4,10 @@ import matplotlib.pyplot as plt
 import math
 import scipy
 from sklearn.neighbors import LocalOutlierFactor
+from IPython.display import display
+import warnings
+
+warnings.filterwarnings("ignore", category=FutureWarning)
 
 # --------------------------------------------------------------
 # Load data
@@ -116,20 +120,21 @@ def mark_outliers_iqr(dataset, col):
 
     return dataset
 
+
 def mark_outliers_chauvenet(dataset, col, C=2):
     """Finds outliers in the specified column of datatable and adds a binary column with
     the same name extended with '_outlier' that expresses the result per data point.
-    
+
     Taken from: https://github.com/mhoogen/ML4QS/blob/master/Python3Code/Chapter3/OutlierDetection.py
 
     Args:
         dataset (pd.DataFrame): The dataset
         col (string): The column you want apply outlier detection to
-        C (int, optional): Degree of certainty for the identification of outliers given the assumption 
+        C (int, optional): Degree of certainty for the identification of outliers given the assumption
                            of a normal distribution, typicaly between 1 - 10. Defaults to 2.
 
     Returns:
-        pd.DataFrame: The original dataframe with an extra boolean column 
+        pd.DataFrame: The original dataframe with an extra boolean column
         indicating whether the value is an outlier or not.
     """
 
@@ -160,21 +165,22 @@ def mark_outliers_chauvenet(dataset, col, C=2):
     dataset[col + "_outlier"] = mask
     return dataset
 
+
 def mark_outliers_lof(dataset, columns, n=20):
     """Mark values as outliers using LOF
 
     Args:
         dataset (pd.DataFrame): The dataset
-        col (string): The column you want apply outlier detection to
+        columns (list or string): The column(s) you want to apply outlier detection to
         n (int, optional): n_neighbors. Defaults to 20.
-    
+
     Returns:
         pd.DataFrame: The original dataframe with an extra boolean column
         indicating whether the value is an outlier or not.
     """
-    
+    # display(dataset)
+    # print(columns)
     dataset = dataset.copy()
-
     lof = LocalOutlierFactor(n_neighbors=n)
     data = dataset[columns]
     outliers = lof.fit_predict(data)
@@ -183,6 +189,43 @@ def mark_outliers_lof(dataset, columns, n=20):
     dataset["outlier_lof"] = outliers == -1
     return dataset, outliers, X_scores
 
+
+def plot_outlier_data(dataset, col, outlier_col, method_label, ax):
+    """Plots outliers in a subplot.
+
+    Args:
+        dataset (pd.DataFrame): The dataset
+        col (string): Column that you want to plot
+        outlier_col (string): Outlier column marked with true/false
+        method_label (string): Label for the outlier detection method
+        ax (matplotlib.axes._axes.Axes): The subplot to use for plotting
+    """
+
+    dataset = dataset.dropna(axis=0, subset=[col, outlier_col]).reset_index()
+    dataset[outlier_col] = dataset[outlier_col].astype("bool")
+
+    # Plot non outliers in default color
+    ax.plot(
+        dataset.index[~dataset[outlier_col]],
+        dataset[col][~dataset[outlier_col]],
+        "+",
+        label="no outlier " + col,
+    )
+    # Plot data points that are outliers in red
+    ax.plot(
+        dataset.index[dataset[outlier_col]],
+        dataset[col][dataset[outlier_col]],
+        "r+",
+        label="outlier " + col,
+    )
+
+    # Set labels and legend
+    ax.set_xlabel("samples")
+    ax.set_ylabel("value")
+    ax.legend(loc="upper center", ncol=2, fancybox=True, shadow=True)
+    ax.set_title(f"{method_label} Outliers")
+
+    return None
 
 
 # --------------------------------------------------------------
@@ -254,14 +297,14 @@ for sensor in sensor_names.keys():
 
 outlier_via_lof = df.copy()
 
+# outlier_via_lof =
+
 # Loop over all columns
-for sensor in sensor_names.keys():
-    outlier_via_lof = mark_outliers_chauvenet(outlier_via_lof, sensor)
+outlier_via_lof, y, z = mark_outliers_lof(outlier_via_lof, sensor_names.keys())
 
 # Plot sensor data, notating outliers via Chauvenets criteria
 for sensor in sensor_names.keys():
-
-    outlier_col = f"{sensor}_outlier"
+    outlier_col = f"outlier_lof"
     plot_binary_outliers(outlier_via_lof, sensor, outlier_col, "lof")
 
 
@@ -270,16 +313,51 @@ for sensor in sensor_names.keys():
 # --------------------------------------------------------------
 
 
+dataset = df.copy()
 
+fig, axs = plt.subplots(nrows=len(sensor_names), ncols=3, figsize=(45, 35), dpi=300)
+
+outlier_methods = [
+    (mark_outliers_iqr, "IQR", "_outlier"),
+    (mark_outliers_chauvenet, "Chev", "_outlier"),
+    (mark_outliers_lof, "lof", "outlier_lof"),
+]
+
+outlier_data_lof, y, z = mark_outliers_lof(dataset.copy(), sensor_names.keys())
+
+# Iterate over every sensor
+for i, sensor in enumerate(sensor_names.keys()):
+    # Iterate and plot each method of outlier detection
+    for j, (outlier_func, method_label, outlier_col_name) in enumerate(outlier_methods):
+        if method_label == "lof":
+            plot_outlier_data(
+                outlier_data_lof, sensor, "outlier_lof", method_label, axs[i][j]
+            )
+        else:
+            outlier_data = outlier_func(dataset.copy(), sensor)
+            outlier_col = f"{sensor}{outlier_col_name}"
+            plot_outlier_data(
+                outlier_data, sensor, outlier_col, method_label, axs[i][j]
+            )
+
+plt.savefig(f"../../reports/figures/Combined Outlier Data for Comparison")
 # --------------------------------------------------------------
 # Choose method and deal with outliers
 # --------------------------------------------------------------
 
-# Test on single column
+constrained_df = df.copy()
+
+for sensor in sensor_names.keys():
+    outlier_via_chev = mark_outliers_chauvenet(constrained_df, sensor)
+    outlier_col = f"{sensor}_outlier"
+    # Update values to NaN where outlier_col is True
+    constrained_df.loc[outlier_via_chev[outlier_col], sensor] = np.nan
 
 
-# Create a loop
+constrained_df.info()
 
 # --------------------------------------------------------------
 # Export new dataframe
 # --------------------------------------------------------------
+
+constrained_df.to_pickle("../../data/interim/02_outliers_removed_df.pkl")
