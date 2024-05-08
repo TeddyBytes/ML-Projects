@@ -233,12 +233,11 @@ def plot_outlier_data(dataset, col, outlier_col, method_label, ax):
 # --------------------------------------------------------------
 
 
-# Create a single figure outside the loop
+# Create a single figure
 fig, axs = plt.subplots(nrows=1, ncols=len(exercise_names.keys()), figsize=(25, 8))
 
-
-for j, exercise in enumerate(exercise_names.keys()):
-    ax = axs[j]
+# Iterate over every exercise
+for ax, exercise in zip(axs.flat, exercise_names.keys()):
     sns.boxplot(data=df.query(f"exercise == '{exercise}'"), ax=ax)
     ax.set_xlabel(exercise_names[exercise])
 
@@ -261,10 +260,12 @@ plt.show()
 # Plot sensor data, notating outliers via IQR
 outlier_via_iqr = df.copy()
 
-
+# Iterate over every sensor
 for sensor in sensor_names.keys():
+    # Notate outliers via boolean
     outlier_via_iqr = mark_outliers_iqr(outlier_via_iqr, sensor)
 
+# Iterate over every sensor
 for sensor in sensor_names.keys():
 
     outlier_col = f"{sensor}_outlier"
@@ -280,7 +281,7 @@ for sensor in sensor_names.keys():
 # Insert Chauvenet's function
 outlier_via_chev = df.copy()
 
-# Loop over all columns
+# Iterate over every sensor
 for sensor in sensor_names.keys():
     outlier_via_chev = mark_outliers_chauvenet(outlier_via_chev, sensor)
 
@@ -312,9 +313,9 @@ for sensor in sensor_names.keys():
 # Check outliers grouped by label
 # --------------------------------------------------------------
 
-
 dataset = df.copy()
 
+# Create a single figure
 fig, axs = plt.subplots(nrows=len(sensor_names), ncols=3, figsize=(45, 35), dpi=300)
 
 outlier_methods = [
@@ -330,12 +331,15 @@ for i, sensor in enumerate(sensor_names.keys()):
     # Iterate and plot each method of outlier detection
     for j, (outlier_func, method_label, outlier_col_name) in enumerate(outlier_methods):
         if method_label == "lof":
+            # Plot outliers
             plot_outlier_data(
                 outlier_data_lof, sensor, "outlier_lof", method_label, axs[i][j]
             )
         else:
+            # Notate outliers via boolean
             outlier_data = outlier_func(dataset.copy(), sensor)
             outlier_col = f"{sensor}{outlier_col_name}"
+            # Plot outliers
             plot_outlier_data(
                 outlier_data, sensor, outlier_col, method_label, axs[i][j]
             )
@@ -347,7 +351,9 @@ plt.savefig(f"../../reports/figures/Combined Outlier Data for Comparison")
 
 constrained_df = df.copy()
 
+# Iterate over every sensor
 for sensor in sensor_names.keys():
+    # Notate outliers via boolean
     outlier_via_chev = mark_outliers_chauvenet(constrained_df, sensor)
     outlier_col = f"{sensor}_outlier"
     # Update values to NaN where outlier_col is True
@@ -360,4 +366,5 @@ constrained_df.info()
 # Export new dataframe
 # --------------------------------------------------------------
 
+# Save datafram to Interim data folder.
 constrained_df.to_pickle("../../data/interim/02_outliers_removed_df.pkl")
