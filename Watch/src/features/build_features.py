@@ -1,19 +1,20 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import math
-import scipy
-from sklearn.neighbors import LocalOutlierFactor
-from IPython.display import display
-import warnings
-
-warnings.filterwarnings("ignore", category=FutureWarning)
+from DataTransformation import LowPassFilter, PrincipalComponentAnalysis
+from TemporalAbstraction import NumericalAbstraction
+from scipy.interpolate import interp1d
+from sklearn.metrics import mean_squared_error
+from scipy.signal import butter, filtfilt
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 # --------------------------------------------------------------
 # Load data
 # --------------------------------------------------------------
 
-df = pd.read_pickle("../../data/interim/01_data_processed.pkl")
+df = pd.read_pickle(f"../../data/interim/02_outliers_removed_df.pkl")
+df.info()
 
 # --------------------------------------------------------------
 # Define Global Variables for friendly plotting
@@ -35,336 +36,244 @@ sensor_names = {
     "gyr_y": "Y-axis Rotation Rate (deg/s)",
     "gyr_z": "Z-axis Rotation Rate (deg/s)",
 }
-print(type(df))
-
-# --------------------------------------------------------------
-# Imported functions
-# --------------------------------------------------------------
-
-
-def plot_binary_outliers(dataset, col, outlier_col, method, reset_index=True, dpi=300):
-    """Plot outliers in case of a binary outlier score. Here, the col specifies the real data
-    column and outlier_col the columns with a binary value (outlier or not).
-
-    Args:
-        dataset (pd.DataFrame): The dataset
-        col (string): Column that you want to plot
-        outlier_col (string): Outlier column marked with true/false
-        reset_index (bool): whether to reset the index for plotting (default: True)
-        dpi (int): Dots Per Inch for saving the plot (default: 300)
-        format (str): File format for saving the plot (e.g., 'png', 'svg', 'pdf')
-    """
-
-    dataset = dataset.dropna(axis=0, subset=[col, outlier_col])
-    dataset[outlier_col] = dataset[outlier_col].astype("bool")
-
-    if reset_index:
-        dataset = dataset.reset_index()
-
-    fig, ax = plt.subplots(figsize=(20, 10))
-
-    plt.xlabel("samples")
-    plt.ylabel("value")
-
-    # Plot non outliers in default color
-    ax.plot(
-        dataset.index[~dataset[outlier_col]],
-        dataset[col][~dataset[outlier_col]],
-        "+",
-    )
-    # Plot data points that are outliers in red
-    ax.plot(
-        dataset.index[dataset[outlier_col]],
-        dataset[col][dataset[outlier_col]],
-        "r+",
-    )
-
-    plt.legend(
-        ["outlier " + col, "no outlier " + col],
-        loc="upper center",
-        ncol=2,
-        fancybox=True,
-        shadow=True,
-    )
-
-    plt.savefig(f"../../reports/figures/{col}_outliers_via_{method}.png", dpi=dpi)
-    plt.show()
-
-    return None
-
-
-def mark_outliers_iqr(dataset, col):
-    """Function to mark values as outliers using the IQR method.
-
-    Args:
-        dataset (pd.DataFrame): The dataset
-        col (string): The column you want apply outlier detection to
-
-    Returns:
-        pd.DataFrame: The original dataframe with an extra boolean column
-        indicating whether the value is an outlier or not.
-    """
-
-    dataset = dataset.copy()
-
-    Q1 = dataset[col].quantile(0.25)
-    Q3 = dataset[col].quantile(0.75)
-    IQR = Q3 - Q1
-
-    lower_bound = Q1 - 1.5 * IQR
-    upper_bound = Q3 + 1.5 * IQR
-
-    dataset[col + "_outlier"] = (dataset[col] < lower_bound) | (
-        dataset[col] > upper_bound
-    )
-
-    return dataset
-
-
-def mark_outliers_chauvenet(dataset, col, C=2):
-    """Finds outliers in the specified column of datatable and adds a binary column with
-    the same name extended with '_outlier' that expresses the result per data point.
-
-    Taken from: https://github.com/mhoogen/ML4QS/blob/master/Python3Code/Chapter3/OutlierDetection.py
-
-    Args:
-        dataset (pd.DataFrame): The dataset
-        col (string): The column you want apply outlier detection to
-        C (int, optional): Degree of certainty for the identification of outliers given the assumption
-                           of a normal distribution, typicaly between 1 - 10. Defaults to 2.
-
-    Returns:
-        pd.DataFrame: The original dataframe with an extra boolean column
-        indicating whether the value is an outlier or not.
-    """
-
-    dataset = dataset.copy()
-    # Compute the mean and standard deviation.
-    mean = dataset[col].mean()
-    std = dataset[col].std()
-    N = len(dataset.index)
-    criterion = 1.0 / (C * N)
-
-    # Consider the deviation for the data points.
-    deviation = abs(dataset[col] - mean) / std
-
-    # Express the upper and lower bounds.
-    low = -deviation / math.sqrt(C)
-    high = deviation / math.sqrt(C)
-    prob = []
-    mask = []
-
-    # Pass all rows in the dataset.
-    for i in range(0, len(dataset.index)):
-        # Determine the probability of observing the point
-        prob.append(
-            1.0 - 0.5 * (scipy.special.erf(high[i]) - scipy.special.erf(low[i]))
-        )
-        # And mark as an outlier when the probability is below our criterion.
-        mask.append(prob[i] < criterion)
-    dataset[col + "_outlier"] = mask
-    return dataset
-
-
-def mark_outliers_lof(dataset, columns, n=20):
-    """Mark values as outliers using LOF
-
-    Args:
-        dataset (pd.DataFrame): The dataset
-        columns (list or string): The column(s) you want to apply outlier detection to
-        n (int, optional): n_neighbors. Defaults to 20.
-
-    Returns:
-        pd.DataFrame: The original dataframe with an extra boolean column
-        indicating whether the value is an outlier or not.
-    """
-    # display(dataset)
-    # print(columns)
-    dataset = dataset.copy()
-    lof = LocalOutlierFactor(n_neighbors=n)
-    data = dataset[columns]
-    outliers = lof.fit_predict(data)
-    X_scores = lof.negative_outlier_factor_
-
-    dataset["outlier_lof"] = outliers == -1
-    return dataset, outliers, X_scores
-
-
-def plot_outlier_data(dataset, col, outlier_col, method_label, ax):
-    """Plots outliers in a subplot.
-
-    Args:
-        dataset (pd.DataFrame): The dataset
-        col (string): Column that you want to plot
-        outlier_col (string): Outlier column marked with true/false
-        method_label (string): Label for the outlier detection method
-        ax (matplotlib.axes._axes.Axes): The subplot to use for plotting
-    """
-
-    dataset = dataset.dropna(axis=0, subset=[col, outlier_col]).reset_index()
-    dataset[outlier_col] = dataset[outlier_col].astype("bool")
-
-    # Plot non outliers in default color
-    ax.plot(
-        dataset.index[~dataset[outlier_col]],
-        dataset[col][~dataset[outlier_col]],
-        "+",
-        label="no outlier " + col,
-    )
-    # Plot data points that are outliers in red
-    ax.plot(
-        dataset.index[dataset[outlier_col]],
-        dataset[col][dataset[outlier_col]],
-        "r+",
-        label="outlier " + col,
-    )
-
-    # Set labels and legend
-    ax.set_xlabel("samples")
-    ax.set_ylabel("value")
-    ax.legend(loc="upper center", ncol=2, fancybox=True, shadow=True)
-    ax.set_title(f"{method_label} Outliers")
-
-    return None
 
 
 # --------------------------------------------------------------
-# Plotting outliers
+# Dealing with missing values (imputation)
 # --------------------------------------------------------------
 
+inter_df = df.copy()
 
-# Create a single figure
-fig, axs = plt.subplots(nrows=1, ncols=len(exercise_names.keys()), figsize=(25, 8))
+# Interpolate null data via time method, preferred method for sequential / timeseries data.
+inter_df = inter_df.interpolate("time")
+inter_df.info()
 
-# Iterate over every exercise
-for ax, exercise in zip(axs.flat, exercise_names.keys()):
-    sns.boxplot(data=df.query(f"exercise == '{exercise}'"), ax=ax)
-    ax.set_xlabel(exercise_names[exercise])
+# exer = inter_df.query(f"set == 20")
+# exer[['acc_y','acc_z', 'acc_x' ]].reset_index(drop=True).plot()
 
-# Add common y-label on the left
-fig.text(0.04, 0.5, "Sensor Measurement", va="center", rotation="vertical")
 
-# Add common x-label at the bottom
-fig.text(0.5, 0.04, "Exercise", ha="center")
+# --------------------------------------------------------------
+# Calculating average duration of set
+# --------------------------------------------------------------
+inter_df.sort_values(["time"], inplace=True)
+inter_df["Duration"] = None
 
-# Add a supertitle outside the loop
-fig.suptitle("Box Plot data for Sensors across all exercises")
+for set_num in inter_df["set"].unique():
+    set_data = inter_df.query(f"set == {set_num}")
+    time_data = set_data.index
+    duration = time_data.max() - time_data.min()
+    duration = duration.seconds
 
-plt.savefig(f"../../reports/figures/Box Plot displaying outliers", dpi=300)
+    inter_df.loc[inter_df["set"] == set_num, "Duration"] = duration
+
+
+# --------------------------------------------------------------
+# Butterworth lowpass filter
+# --------------------------------------------------------------
+
+# According to nyquist thm sampling frequency must be 2x max frequency
+
+
+filtered_df = inter_df.copy()
+filtered_df.info()
+sample_freq = 5
+
+lpf = LowPassFilter()
+
+for sensor in sensor_names.keys():
+    # Executes Inplace
+    lpf.low_pass_filter(
+        filtered_df,
+        sensor,
+        sample_freq,
+        1.3,
+    )
+
+fig, axs = plt.subplots(
+    nrows=6,
+    ncols=2,
+    figsize=(20, 15),
+)
+
+for i, sensor in enumerate(sensor_names.keys()):
+    axs[i][0].plot(
+        inter_df[sensor][0:100].reset_index(drop=True),
+    )
+    axs[i][0].set_ylabel(sensor)
+    axs[i][1].plot(
+        filtered_df[sensor][0:100].reset_index(drop=True),
+    )
+    axs[i][1].set_ylabel(sensor)
+
+axs[i][0].set_xlabel("Before LPF")
+axs[i][1].set_xlabel("After LPF")
+plt.savefig(f"../../reports/figures/Before and After LPF Data")
+plt.show()
+
+
+# --------------------------------------------------------------
+# Test sampling frequency from FFT.
+# --------------------------------------------------------------
+
+fft_df = inter_df.copy()
+fft_result = np.fft.fft(fft_df["acc_x"])
+
+# Calculate the frequency bins
+sampling_freq = (
+    1 / (fft_df.index[1] - fft_df.index[0]).total_seconds()
+)  # Sampling frequency in Hz
+freq_bins = np.fft.fftfreq(len(fft_result), d=1 / sampling_freq)
+
+# Plot the FFT result (optional)
+import matplotlib.pyplot as plt
+
+plt.figure(figsize=(10, 6))
+plt.plot(freq_bins, np.abs(fft_result))
+plt.xlabel("Frequency (Hz)")
+plt.ylabel("Amplitude")
+plt.title("FFT of acc_x")
+plt.grid(True)
 plt.show()
 
 # --------------------------------------------------------------
-# Interquartile range (distribution based)
+# Principal component analysis PCA
 # --------------------------------------------------------------
 
-# Plot sensor data, notating outliers via IQR
-outlier_via_iqr = df.copy()
+# Separate Numerical and Categorical features , PCA can only run on numerical data...
+not_in_sensor_names = set(filtered_df.columns) - set(sensor_names.keys())
+categorical_df = filtered_df[list(not_in_sensor_names)]
+numerical_features = list(sensor_names.keys())
+num_df = filtered_df.copy()[numerical_features]
 
-# Iterate over every sensor
+
+# Try Standardization
+scaler = StandardScaler()
+standardized_data = scaler.fit_transform(num_df)
+
+# Perform dimensionality reduction
+pca = PCA(n_components=5)
+pca_std_table = pca.fit_transform(standardized_data)
+
+# Order of data is same as input data during standardization
+explained_variance = pca.explained_variance_ratio_
+cumulative_variance = np.sum(explained_variance)
+
+# Plotting the scree plot
+plt.figure(figsize=(10, 6))
+plt.plot(
+    range(1, len(explained_variance) + 1),
+    explained_variance,
+    marker="o",
+    linestyle="-",
+)
+plt.title("Scree Plot with Standardization Preprocessing.")
+plt.xlabel("Principal Component")
+plt.ylabel("Explained Variance Ratio")
+plt.grid(True)
+plt.show()
+
+
+# Try Normalization
+
+normalizer = MinMaxScaler()
+normalized_data = normalizer.fit_transform(num_df)
+
+# Perform dimensionality reduction
+# N_components selected via elbow method
+pca = PCA(n_components=3)
+pca_norm_table = pca.fit_transform(normalized_data)
+
+
+# Order of data is same as input data during standardization
+explained_variance = pca.explained_variance_ratio_
+cumulative_variance = np.sum(explained_variance)
+
+# Plotting the scree plot
+plt.figure(figsize=(10, 6))
+plt.plot(
+    range(1, len(explained_variance) + 1),
+    explained_variance,
+    marker="o",
+    linestyle="-",
+)
+plt.title("Scree Plot with Normalization in preprocessing")
+plt.xlabel("Principal Component")
+plt.ylabel("Explained Variance Ratio")
+plt.grid(True)
+plt.show()
+
+
+# Combine results into one df
+pca_via_std_df = pd.DataFrame(
+    pca_std_table,
+    index=filtered_df.index,
+    columns=[
+        "pca_std_acc_x",
+        "pca_std_acc_y",
+        "pca_std_acc_z",
+        "pca_std_gyr_x",
+        "pca_std_gyr_y",
+    ],
+)
+
+pca_via_norm_df = pd.DataFrame(
+    pca_norm_table,
+    index=filtered_df.index,
+    columns=[
+        "pca_norm_acc_x",
+        "pca_norm_acc_y",
+        "pca_norm_acc_z",
+    ],
+)
+
+pca_df = pd.concat(
+    [
+        filtered_df,
+        pca_via_std_df,
+        pca_via_norm_df,
+    ],
+    axis=1,
+)
+
+pca_df.to_pickle(f"../../data/interim/03_PCA with norm and std.")
+
+# --------------------------------------------------------------
+# Sum of squares attributes
+# --------------------------------------------------------------
+
+acc_r, gyr_r = 0, 0
+
 for sensor in sensor_names.keys():
-    # Notate outliers via boolean
-    outlier_via_iqr = mark_outliers_iqr(outlier_via_iqr, sensor)
+    if ("acc" in sensor) and ("pca" not in sensor):
+        acc_r += pca_df[sensor] ** 2
+    elif ("gyr" in sensor) and ("pca" not in sensor):
+        gyr_r += pca_df[sensor] ** 2
 
-# Iterate over every sensor
-for sensor in sensor_names.keys():
+pca_df["acc_r"] = np.square(acc_r)
+pca_df["gyr_r"] = np.square(gyr_r)
 
-    outlier_col = f"{sensor}_outlier"
-    plot_binary_outliers(outlier_via_iqr, sensor, outlier_col, "iqr")
-
-# --------------------------------------------------------------
-# Chauvenets criteron (distribution based)
-# --------------------------------------------------------------
-
-# Check for normal distribution
-
-
-# Insert Chauvenet's function
-outlier_via_chev = df.copy()
-
-# Iterate over every sensor
-for sensor in sensor_names.keys():
-    outlier_via_chev = mark_outliers_chauvenet(outlier_via_chev, sensor)
-
-
-# Plot sensor data, notating outliers via Chauvenets criteria
-for sensor in sensor_names.keys():
-
-    outlier_col = f"{sensor}_outlier"
-    plot_binary_outliers(outlier_via_chev, sensor, outlier_col, "Chauvenets")
+pca_df.describe()
 
 # --------------------------------------------------------------
-# Local outlier factor (distance based)
+# Temporal abstraction
 # --------------------------------------------------------------
-
-outlier_via_lof = df.copy()
-
-# outlier_via_lof =
-
-# Loop over all columns
-outlier_via_lof, y, z = mark_outliers_lof(outlier_via_lof, sensor_names.keys())
-
-# Plot sensor data, notating outliers via Chauvenets criteria
-for sensor in sensor_names.keys():
-    outlier_col = f"outlier_lof"
-    plot_binary_outliers(outlier_via_lof, sensor, outlier_col, "lof")
 
 
 # --------------------------------------------------------------
-# Check outliers grouped by label
+# Frequency features
 # --------------------------------------------------------------
 
-dataset = df.copy()
-
-# Create a single figure
-fig, axs = plt.subplots(nrows=len(sensor_names), ncols=3, figsize=(45, 35), dpi=300)
-
-outlier_methods = [
-    (mark_outliers_iqr, "IQR", "_outlier"),
-    (mark_outliers_chauvenet, "Chev", "_outlier"),
-    (mark_outliers_lof, "lof", "outlier_lof"),
-]
-
-outlier_data_lof, y, z = mark_outliers_lof(dataset.copy(), sensor_names.keys())
-
-# Iterate over every sensor
-for i, sensor in enumerate(sensor_names.keys()):
-    # Iterate and plot each method of outlier detection
-    for j, (outlier_func, method_label, outlier_col_name) in enumerate(outlier_methods):
-        if method_label == "lof":
-            # Plot outliers
-            plot_outlier_data(
-                outlier_data_lof, sensor, "outlier_lof", method_label, axs[i][j]
-            )
-        else:
-            # Notate outliers via boolean
-            outlier_data = outlier_func(dataset.copy(), sensor)
-            outlier_col = f"{sensor}{outlier_col_name}"
-            # Plot outliers
-            plot_outlier_data(
-                outlier_data, sensor, outlier_col, method_label, axs[i][j]
-            )
-
-plt.savefig(f"../../reports/figures/Combined Outlier Data for Comparison")
-# --------------------------------------------------------------
-# Choose method and deal with outliers
-# --------------------------------------------------------------
-
-constrained_df = df.copy()
-
-# Iterate over every sensor
-for sensor in sensor_names.keys():
-    # Notate outliers via boolean
-    outlier_via_chev = mark_outliers_chauvenet(constrained_df, sensor)
-    outlier_col = f"{sensor}_outlier"
-    # Update values to NaN where outlier_col is True
-    constrained_df.loc[outlier_via_chev[outlier_col], sensor] = np.nan
-
-
-constrained_df.info()
 
 # --------------------------------------------------------------
-# Export new dataframe
+# Dealing with overlapping windows
 # --------------------------------------------------------------
 
-# Save datafram to Interim data folder.
-constrained_df.to_pickle("../../data/interim/02_outliers_removed_df.pkl")
+
+# --------------------------------------------------------------
+# Clustering
+# --------------------------------------------------------------
+
+
+# --------------------------------------------------------------
+# Export dataset
+# --------------------------------------------------------------
