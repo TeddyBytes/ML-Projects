@@ -7,10 +7,10 @@
 #                                                            #
 ##############################################################
 
-# Updated by Dave Ebbelaar on 22-12-2022
 
 import numpy as np
 import scipy.stats as stats
+
 
 # Class to abstract a history of numerical values we can use as an attribute.
 class NumericalAbstraction:
@@ -46,4 +46,14 @@ class NumericalAbstraction:
                 .apply(self.aggregate_value(aggregation_function))
             )
 
+        return data_table
+
+    # Updated to calculate the rolling range, an ideal metric for detecting short term fluctuations
+    def calculate_range(self, data_table, cols, window_size):
+        for col in cols:
+            data_table[col + "_temp_range_ws_" + str(window_size)] = (
+                data_table[col]
+                .rolling(window_size)
+                .apply(lambda x: np.max(x) - np.min(x))
+            )
         return data_table
