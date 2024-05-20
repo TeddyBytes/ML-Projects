@@ -127,9 +127,6 @@ sampling_freq = (
 )  # Sampling frequency in Hz
 freq_bins = np.fft.fftfreq(len(fft_result), d=1 / sampling_freq)
 
-# Plot the FFT result (optional)
-import matplotlib.pyplot as plt
-
 plt.figure(figsize=(10, 6))
 plt.plot(freq_bins, np.abs(fft_result))
 plt.xlabel("Frequency (Hz)")
@@ -295,10 +292,10 @@ for ex_set in fft_df["set"].unique():
     # Filter by each set
     # Reset index before copy, because df might be smaller after drop
     set_df = fft_df.query(f"set == {ex_set}").reset_index(drop=True).copy()
-    set_df = fft.abstract_frequency(set_df,features_to_abstract, 14, 5)
+    set_df = fft.abstract_frequency(set_df, features_to_abstract, 14, 5)
     each_set_df.append(set_df)
 
-df_fft = pd.concat(each_set_df).set_index('time', drop=True)
+df_fft = pd.concat(each_set_df).set_index("time", drop=True)
 df_fft = df_fft[::2]
 
 
