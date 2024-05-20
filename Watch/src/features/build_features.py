@@ -1,8 +1,10 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
 from DataTransformation import LowPassFilter, PrincipalComponentAnalysis
 from TemporalAbstraction import NumericalAbstraction
+from FrequencyAbstraction import FourierTransformation
 from scipy.interpolate import interp1d
 from sklearn.metrics import mean_squared_error
 from scipy.signal import butter, filtfilt
@@ -15,6 +17,7 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 df = pd.read_pickle(f"../../data/interim/02_outliers_removed_df.pkl")
 df.info()
+# sns.pairplot(df)
 
 # --------------------------------------------------------------
 # Define Global Variables for friendly plotting
@@ -258,15 +261,45 @@ pca_df.describe()
 # Temporal abstraction
 # --------------------------------------------------------------
 
+df_temp = pca_df.copy()
+num_abs = NumericalAbstraction()
+window_size = 5
 
+features_to_abstract = list(sensor_names.keys()) + ["gyr_r", "acc_r"]
+each_set_df = []
+
+# Iterate over each exercise set
+for ex_set in df_temp["set"].unique():
+    # Filter by each set
+    set_df = df_temp.query(f"set == {ex_set}").copy()
+    # add rolling average/std dev/range to data
+    abs_feature_df = num_abs.abstract_numerical(
+        set_df, features_to_abstract, window_size, "mean"
+    )
+    abs_feature_df = num_abs.abstract_numerical(
+        set_df, features_to_abstract, window_size, "std"
+    )
+    abs_feature_df = num_abs.calculate_range(set_df, features_to_abstract, window_size)
+    each_set_df.append(abs_feature_df)
+
+df_temp_ext = pd.concat(each_set_df)
 # --------------------------------------------------------------
 # Frequency features
 # --------------------------------------------------------------
 
+fft_df = df_temp_ext.copy().reset_index()
+fft = FourierTransformation()
 
-# --------------------------------------------------------------
-# Dealing with overlapping windows
-# --------------------------------------------------------------
+each_set_df = []
+for ex_set in fft_df["set"].unique():
+    # Filter by each set
+    # Reset index before copy, because df might be smaller after drop
+    set_df = fft_df.query(f"set == {ex_set}").reset_index(drop=True).copy()
+    set_df = fft.abstract_frequency(set_df,features_to_abstract, 14, 5)
+    each_set_df.append(set_df)
+
+df_fft = pd.concat(each_set_df).set_index('time', drop=True)
+df_fft = df_fft[::2]
 
 
 # --------------------------------------------------------------
