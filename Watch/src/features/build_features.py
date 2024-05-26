@@ -124,28 +124,28 @@ plt.show()
 # Test sampling frequency from FFT.
 # --------------------------------------------------------------
 
-fft_df = inter_df.copy()
-fft_result = np.fft.fft(fft_df["acc_x"])
+# fft_df = inter_df.copy()
+# fft_result = np.fft.fft(fft_df["acc_x"])
 
-# Calculate the frequency bins
-sampling_freq = (
-    1 / (fft_df.index[1] - fft_df.index[0]).total_seconds()
-)  # Sampling frequency in Hz
-freq_bins = np.fft.fftfreq(len(fft_result), d=1 / sampling_freq)
+# # Calculate the frequency bins
+# sampling_freq = (
+#     1 / (fft_df.index[1] - fft_df.index[0]).total_seconds()
+# )  # Sampling frequency in Hz
+# freq_bins = np.fft.fftfreq(len(fft_result), d=1 / sampling_freq)
 
 
-# Plot frequency domain
-plt.figure(figsize=(10, 6))
-plt.plot(freq_bins, np.abs(fft_result))
+# # Plot frequency domain
+# plt.figure(figsize=(10, 6))
+# plt.plot(freq_bins, np.abs(fft_result))
 
-# Labels and Title
-plt.xlabel("Frequency (Hz)")
-plt.ylabel("Amplitude")
-plt.title("FFT of acc_x")
-plt.grid(True)
+# # Labels and Title
+# plt.xlabel("Frequency (Hz)")
+# plt.ylabel("Amplitude")
+# plt.title("FFT of acc_x")
+# plt.grid(True)
 
-# Show Plot
-plt.show()
+# # Show Plot
+# plt.show()
 
 # --------------------------------------------------------------
 # Principal component analysis PCA
@@ -316,7 +316,7 @@ for ex_set in fft_df["set"].unique():
     each_set_df.append(set_df)
 
 df_fft = pd.concat(each_set_df).set_index("time", drop=True)
-
+df_fft.head(20)
 # Since we are dealing with highly correlated values, removing everyother datapoint reduces redundancy
 df_fft = df_fft[::2]
 
