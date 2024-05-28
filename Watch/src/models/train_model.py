@@ -23,7 +23,7 @@ plt.rcParams["lines.linewidth"] = 2
 # --------------------------------------------------------------
 # Create a training and test set
 # --------------------------------------------------------------
-df = pd.read_pickle(f"../../data/interim/04_FeatureEng_DF.pkl")
+df = pd.read_pickle("../../data/interim/05_FeatureEng_NO_NULL_DF.pkl")
 df["Duration"] = df["Duration"].astype(int)
 # df['Duration'].dtype
 
@@ -150,6 +150,9 @@ print(f"Number of highly correlated features is: {num_corr_feats}")
 X_train_reduced = X_train_encoded.drop(columns=high_correlation_features)
 X_test_reduced = X_test_encoded.drop(columns=high_correlation_features)
 
+# Ensure no null values
+# X_train_reduced.isna().any()[X_train_reduced.isna().any()]
+# X_train_reduced['acc_r_freq_1.429_Hz_ws_14'].isna().sum()
 
 # --------------------------------------------------------------
 # Perform forward feature selection using simple decision tree

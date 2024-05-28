@@ -279,6 +279,7 @@ pca_df.describe()
 # --------------------------------------------------------------
 
 df_temp = pca_df.copy()
+# df_temp.isna().any()[df_temp.isna().any()]
 num_abs = NumericalAbstraction()
 window_size = 5
 
@@ -300,6 +301,12 @@ for ex_set in df_temp["set"].unique():
     each_set_df.append(abs_feature_df)
 
 df_temp_ext = pd.concat(each_set_df)
+# rows_with_null = df_temp_ext[df_temp_ext.isna().any(axis=1)]
+# rows_with_null.shape
+# df_temp_ext.isna().any()[df_temp_ext.isna().any()]
+# x = df_temp_ext[df_temp_ext['acc_x_temp_std_ws_5'].isnull()]
+# x2 = x['acc_x_temp_std_ws_5']
+# x2.head(100)
 # --------------------------------------------------------------
 # Frequency features
 # --------------------------------------------------------------
@@ -316,79 +323,157 @@ for ex_set in fft_df["set"].unique():
     each_set_df.append(set_df)
 
 df_fft = pd.concat(each_set_df).set_index("time", drop=True)
-df_fft.head(20)
+
 # Since we are dealing with highly correlated values, removing everyother datapoint reduces redundancy
-df_fft = df_fft[::2]
+reduced_df_fft_ = df_fft[::2]
+
+# Remove null values for modeling.
+no_null_fft = df_fft.dropna()[::2]
 
 
 # --------------------------------------------------------------
-# Clustering
+# Clustering Function
 # --------------------------------------------------------------
 
-cluster_df = df_fft.copy()
-subset = cluster_df[["acc_x", "acc_y", "acc_z"]].copy()
-inertias = []
-sillhouette = []
 
-for k in range(2, 10):
-    cluster = KMeans(n_clusters=k, n_init=20, random_state=0)
-    cluster.fit(subset)
-    inertias.append(cluster.inertia_)
+def cluster_and_plot(df, elbow=4):
+    cluster_df = df.copy()
+    subset = cluster_df[["acc_x", "acc_y", "acc_z"]].copy()
+    inertias = []
 
+    for k in range(2, 10):
+        cluster = KMeans(n_clusters=k, n_init=20, random_state=0)
+        cluster.fit(subset)
+        inertias.append(cluster.inertia_)
 
-x = np.arange(2, 2 + len(inertias))
-plt.plot(x, inertias)
+    x = np.arange(2, 2 + len(inertias))
+    plt.plot(x, inertias)
+    plt.xlabel("Number of Clusters")
+    plt.ylabel("Inertia")
+    plt.title("Elbow Method for Optimal Number of Clusters")
+    plt.show()
 
-elbow = 4
+    final_cluster = KMeans(n_clusters=elbow, n_init=20, random_state=0)
+    final_cluster.fit(subset)
 
-final_cluster = KMeans(n_clusters=elbow, n_init=20, random_state=0)
-final_cluster.fit(subset)
+    cluster_df["cluster"] = final_cluster.labels_
 
-cluster_df["cluster"] = final_cluster.labels_
+    # Extracting centroids
+    centroids = final_cluster.cluster_centers_
 
-# Extracting centroids
-centroids = final_cluster.cluster_centers_
+    # Plotting clusters in 3D with a larger figure size
+    fig = plt.figure(figsize=(14, 10))  # Adjust the figsize as needed
+    ax = fig.add_subplot(111, projection="3d")
 
-# Plotting clusters in 3D with a larger figure size
-fig = plt.figure(figsize=(14, 10))  # Adjust the figsize as needed
-ax = fig.add_subplot(111, projection="3d")
+    # Plot each cluster with different colors and smaller dots
+    for exercise in cluster_df["exercise"].unique():
+        ex_points = cluster_df[cluster_df["exercise"] == exercise]
+        ax.scatter(
+            ex_points["acc_x"],
+            ex_points["acc_y"],
+            ex_points["acc_z"],
+            s=20,
+            label=f"{exercise}",
+        )
 
-
-# Plot each cluster with different colors and smaller dots
-for exercise in cluster_df["exercise"].unique():
-    ex_points = cluster_df[cluster_df["exercise"] == exercise]
+    # Plot centroids with larger black dots
     ax.scatter(
-        ex_points["acc_x"],
-        ex_points["acc_y"],
-        ex_points["acc_z"],
-        s=20,
-        label=f"{exercise}",
+        centroids[:, 0],
+        centroids[:, 1],
+        centroids[:, 2],
+        c="black",
+        s=200,
+        alpha=0.5,
+        label="Centroids",
     )
 
-# Plot centroids with larger black dots
-ax.scatter(
-    centroids[:, 0],
-    centroids[:, 1],
-    centroids[:, 2],
-    c="black",
-    s=200,
-    alpha=0.5,
-    label="Centroids",
-)
+    # Labels and title
+    ax.set_xlabel("acc_x")
+    ax.set_ylabel("acc_y")
+    ax.set_zlabel("acc_z")
+    ax.set_title("3D K-Means Clustering")
+    ax.legend()
 
-# Labels and title
-ax.set_xlabel("acc_x")
-ax.set_ylabel("acc_y")
-ax.set_zlabel("acc_z")
-ax.set_title("3D K-Means Clustering")
-ax.legend()
+    # Show plot
+    plt.show()
 
-# Show plot
-plt.show()
+    return cluster_df
+
+
+# Apply clustering and plotting to both dataframes
+reduced_df = cluster_and_plot(reduced_df_fft_)
+no_null_df = cluster_and_plot(no_null_fft)
+
+# --------------------------------------------------------------
+# Clustering for single df
+# --------------------------------------------------------------
+
+
+# cluster_df = reduced_df_fft_.copy()
+# subset = cluster_df[["acc_x", "acc_y", "acc_z"]].copy()
+# inertias = []
+# sillhouette = []
+
+# for k in range(2, 10):
+#     cluster = KMeans(n_clusters=k, n_init=20, random_state=0)
+#     cluster.fit(subset)
+#     inertias.append(cluster.inertia_)
+
+
+# x = np.arange(2, 2 + len(inertias))
+# plt.plot(x, inertias)
+
+# elbow = 4
+
+# final_cluster = KMeans(n_clusters=elbow, n_init=20, random_state=0)
+# final_cluster.fit(subset)
+
+# cluster_df["cluster"] = final_cluster.labels_
+
+# # Extracting centroids
+# centroids = final_cluster.cluster_centers_
+
+# # Plotting clusters in 3D with a larger figure size
+# fig = plt.figure(figsize=(14, 10))  # Adjust the figsize as needed
+# ax = fig.add_subplot(111, projection="3d")
+
+
+# # Plot each cluster with different colors and smaller dots
+# for exercise in cluster_df["exercise"].unique():
+#     ex_points = cluster_df[cluster_df["exercise"] == exercise]
+#     ax.scatter(
+#         ex_points["acc_x"],
+#         ex_points["acc_y"],
+#         ex_points["acc_z"],
+#         s=20,
+#         label=f"{exercise}",
+#     )
+
+# # Plot centroids with larger black dots
+# ax.scatter(
+#     centroids[:, 0],
+#     centroids[:, 1],
+#     centroids[:, 2],
+#     c="black",
+#     s=200,
+#     alpha=0.5,
+#     label="Centroids",
+# )
+
+# # Labels and title
+# ax.set_xlabel("acc_x")
+# ax.set_ylabel("acc_y")
+# ax.set_zlabel("acc_z")
+# ax.set_title("3D K-Means Clustering")
+# ax.legend()
+
+# # Show plot
+# plt.show()
 
 
 # --------------------------------------------------------------
 # Export dataset
 # --------------------------------------------------------------
 
-cluster_df.to_pickle("../../data/interim/04_FeatureEng_DF.pkl")
+reduced_df.to_pickle("../../data/interim/04_FeatureEng_DF.pkl")
+no_null_df.to_pickle("../../data/interim/05_FeatureEng_NO_NULL_DF.pkl")
