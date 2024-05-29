@@ -1,16 +1,28 @@
+# Standard Libraries
+import time
+import cProfile
+import pstats
+
+# Data Handling
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.model_selection import train_test_split
-import matplotlib.pyplot as plt
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.feature_selection import RFE
-from sklearn.svm import SVC
 
-# from LearningAlgorithms import ClassificationAlgorithms
+# Visualization
+import matplotlib.pyplot as plt
 import seaborn as sns
-import itertools
+
+# Scikit-learn Components
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.pipeline import Pipeline
 from sklearn.metrics import accuracy_score, confusion_matrix
+from sklearn.feature_selection import SelectFromModel, RFE
+
+# Machine Learning Models
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.svm import SVC
+from sklearn.linear_model import LogisticRegression
+from sklearn.naive_bayes import GaussianNB
 
 
 # Plot settings
@@ -58,26 +70,6 @@ sensor_names = {
     "gyr_z": "Z-axis Rotation Rate (deg/s)",
 }
 
-# --------------------------------------------------------------
-# Split feature subsets
-# --------------------------------------------------------------
-# print(set(df.columns))
-
-sensor_features = list(sensor_names.keys())
-magnitude_features = ["acc_r", "gyr_r"]
-pca_features = [col for col in df.columns if "pca" in col]
-freq_features = [col for col in df.columns if ("freq" in col) or ("pse" in col)]
-# rolling avg/std/...
-temporal_features = [col for col in df.columns if "_temp" in col]
-
-# print(len(temporal_features))
-
-feature_set_1 = sensor_features
-feature_set_2 = list(set(feature_set_1 + magnitude_features))
-feature_set_3 = list(set(feature_set_2 + pca_features))
-feature_set_4 = list(set(feature_set_3 + temporal_features))
-feature_set_5 = list(set(feature_set_4 + freq_features))
-
 
 # --------------------------------------------------------------
 # Perform one hot encoded of categorical features
@@ -89,21 +81,21 @@ X_test_cat = X_test.select_dtypes(exclude=[np.number])
 X_train_num = X_train.select_dtypes(include=[np.number])
 X_test_num = X_test.select_dtypes(include=[np.number])
 
+# X_train_cat['participant'].value_counts()
+
 # One-hot encode categorical features in the training and test data based on training data.
-encoder = OneHotEncoder(
-    handle_unknown="ignore", sparse=False
-)  # Adjust parameters as needed
-X_train_raw_encoded = encoder.fit_transform(X_train_cat)
-X_test_raw_encoded = encoder.transform(X_test_cat)
+encoder = OneHotEncoder(handle_unknown="ignore")
+X_train_raw_encoded = encoder.fit_transform(X_train_cat).toarray()
+X_test_raw_encoded = encoder.transform(X_test_cat).toarray()
 
 # Get column labels to encoded DataFrames
-categorical_columns = list(X_train_cat.columns)
 encoded_column_names = encoder.get_feature_names_out(X_train_cat.columns)
 
 # Convert one-hot encoded data back to DataFrame
 X_train_encoded_df = pd.DataFrame(
     X_train_raw_encoded, index=X_train_cat.index, columns=encoded_column_names
 )
+
 X_test_encoded_df = pd.DataFrame(
     X_test_raw_encoded, index=X_test_cat.index, columns=encoded_column_names
 )
@@ -155,35 +147,312 @@ X_test_reduced = X_test_encoded.drop(columns=high_correlation_features)
 # X_train_reduced['acc_r_freq_1.429_Hz_ws_14'].isna().sum()
 
 # --------------------------------------------------------------
-# Perform forward feature selection using simple decision tree
+# Perform forward feature selection using Random Forests only
 # --------------------------------------------------------------
+# from sklearn.ensemble import RandomForestClassifier
+# from sklearn.metrics import accuracy_score
+# import numpy as np
 
+# # Initialize an empty set to store selected features
+# selected_features = []
 
+# # Create a copy of the reduced dataset
+# X_train_reduced_copy = X_train_reduced.copy()
+
+# # Train a Random Forest classifier on the full feature set
+# rf_classifier = RandomForestClassifier(n_estimators=100, random_state=42)
+# rf_classifier.fit(X_train_reduced_copy, y_train)
+
+# # Calculate the initial accuracy on the full feature set
+# initial_accuracy = accuracy_score(y_train, rf_classifier.predict(X_train_reduced_copy))
+
+# # Initialize a variable to keep track of the number of iterations
+# num_iterations = 0
+
+# # Iterate until all features are selected or until no improvement in accuracy
+# while len(selected_features) < X_train_reduced_copy.shape[1]:
+#     # Increment the iteration counter
+#     num_iterations += 1
+
+#     # Initialize variables to keep track of the best feature to add and its corresponding accuracy
+#     best_feature = None
+#     best_feature_accuracy = 0
+
+#     # Iterate over remaining features
+#     for feature in X_train_reduced_copy.columns:
+#         # Skip if the feature is already selected
+#         if feature in selected_features:
+#             continue
+
+#         # Add the feature to the selected set
+#         selected_features.append(feature)
+
+#         # Train a Random Forest classifier on the selected features
+#         rf_classifier.fit(X_train_reduced_copy[selected_features], y_train)
+
+#         # Calculate accuracy on the selected features
+#         accuracy = accuracy_score(
+#             y_train, rf_classifier.predict(X_train_reduced_copy[selected_features])
+#         )
+
+#         # Update the best feature and accuracy if the current feature improves accuracy
+#         if accuracy > best_feature_accuracy:
+#             best_feature = feature
+#             best_feature_accuracy = accuracy
+
+#         # Remove the feature from the selected set for the next iteration
+#         selected_features.remove(feature)
+
+#     # Add the best feature to the selected set
+#     selected_features.append(best_feature)
+
+#     # Print the progress and number of iterations
+#     print(
+#         f"Iteration {num_iterations}: Best feature added: {best_feature}, Accuracy: {best_feature_accuracy:.4f}"
+#     )
+
+#     # Update the best accuracy
+#     if best_feature is not None:
+#         best_accuracy = best_feature_accuracy
+#     else:
+#         # Stop if no feature improves accuracy
+#         break
+
+# # Print the selected features
+# print("Selected Features:", selected_features)
+
+# selected_features_fs_rf = [
+#     "set",
+#     "acc_x",
+#     "acc_y",
+#     "acc_z",
+#     "gyr_x",
+#     "gyr_y",
+#     "gyr_z",
+#     "Duration",
+#     "pca_std_acc_z",
+#     "pca_std_gyr_x",
+#     "pca_std_gyr_y",
+#     "pca_norm_acc_x",
+#     "acc_r",
+#     "gyr_r",
+#     "gyr_x_temp_mean_ws_5",
+#     "gyr_y_temp_mean_ws_5",
+#     "gyr_z_temp_mean_ws_5",
+#     "gyr_r_temp_mean_ws_5",
+#     "acc_z_freq_1.429_Hz_ws_14",
+# ]
 # --------------------------------------------------------------
-# Perform Recursive Feature Elimination using simple random forest feature importance
+# Perform Feature Elimination using feature importance of select models
 # --------------------------------------------------------------
 
 # Define the number of features to select (square root of total number of features)
 n_features_to_select = int(np.sqrt(X_train_reduced.shape[1]))
 
-# Initialize Random Forest Classifier and SVC
-rf_classifer = RandomForestClassifier()
-sv_classifier = SVC(kernel="linear")
+# Initialize Random Forest, Gradient Boosting, and Logistic Regression Classifiers
+rf_classifier = RandomForestClassifier(n_estimators=100, random_state=42)
+gb_classifier = GradientBoostingClassifier(n_estimators=100, random_state=42)
+lr_classifier = LogisticRegression(max_iter=1000, random_state=42)
 
-# Initialize RFE for both models
-rf_rfe = RFE(estimator=rf_classifer, n_features_to_select=n_features_to_select)
-svc_rfe = RFE(estimator=sv_classifier, n_features_to_select=n_features_to_select)
+# Create SelectFromModel object for Random Forest
+sfm_rf = SelectFromModel(estimator=rf_classifier, threshold="mean")
+sfm_rf.fit(X_train_reduced, y_train)
+selected_features_rf = X_train_reduced.columns[sfm_rf.get_support()]
 
-# Fit RFE to both models
-rf_rfe.fit(X_train_reduced, y_train)
-svc_rfe.fit(X_train_reduced, y_train)
+# Create SelectFromModel object for Gradient Boosting
+# This took more time than RF
+sfm_gb = SelectFromModel(estimator=gb_classifier, threshold="mean")
+sfm_gb.fit(X_train_reduced, y_train)
+selected_features_gb = X_train_reduced.columns[sfm_gb.get_support()]
 
-rf_cols = X_train_reduced.columns[rf_rfe.support_]
-svc_cols = X_train_reduced.columns[svc_rfe.support_]
+# Create SelectFromModel object for Logistic Regression
+sfm_lr = SelectFromModel(estimator=lr_classifier, threshold="mean")
+sfm_lr.fit(X_train_reduced, y_train)
+selected_features_lr = X_train_reduced.columns[sfm_lr.get_support()]
+
+# Union over all features, all features selected by at least one model.
+optimal_features = (
+    set(selected_features_rf) | set(selected_features_gb) | set(selected_features_lr)
+)
+len(optimal_features)
+# --------------------------------------------------------------
+# Split feature subsets
+# --------------------------------------------------------------
+# print(set(df.columns))
+
+pot_magnitude_features = ["acc_r", "gyr_r"]
+
+# Extract sensor features that exist in the dataset
+sensor_features = [
+    sensor for sensor in list(sensor_names.keys()) if sensor in X_train_reduced.columns
+]
+
+# Extract magnitude features that exist in the dataset
+magnitude_features = [
+    sensor for sensor in pot_magnitude_features if sensor in X_train_reduced.columns
+]
+
+# Extract PCA features from the dataset
+pca_features = [col for col in X_train_reduced.columns if "pca" in col]
+
+# Extract frequency features from the dataset, including both "freq" and "pse" features
+freq_features = [
+    col for col in X_train_reduced.columns if ("freq" in col) or ("pse" in col)
+]
+# rolling avg/std/...
+temporal_features = [col for col in X_train_reduced.columns if "_temp" in col]
+
+
+# Define different feature sets
+feature_set_1 = sensor_features
+feature_set_2 = list(set(feature_set_1 + magnitude_features))
+feature_set_3 = list(set(feature_set_2 + pca_features))
+feature_set_4 = list(set(feature_set_3 + temporal_features))
+feature_set_5 = list(set(feature_set_4 + freq_features))
+feature_set_6 = list(selected_features_rf)
+feature_set_7 = list(selected_features_gb)
+feature_set_8 = list(selected_features_lr)
+feature_set_10 = list(optimal_features)
+
+
+# --------------------------------------------------------------
+# Define parameters for Grid search
+# --------------------------------------------------------------
+
+# Define feature sets
+feature_sets = {
+    "Sensor Features": feature_set_1,
+    "Sensor + Magnitude Features": feature_set_2,
+    "Sensor + Magnitude + PCA Features": feature_set_3,
+    "Sensor + Magnitude + PCA + Temporal Features": feature_set_4,
+    "Sensor + Magnitude + PCA + Temporal + Frequency Features": feature_set_5,
+    "Selected Features from Random Forest": feature_set_6,
+    "Selected Features from Gradient Boosting": feature_set_7,
+    "Selected Features from Logistic Regression": feature_set_8,
+    "Optimal Features": feature_set_10,
+}
+
+# # Define models
+# models = {
+#     "Random Forest": RandomForestClassifier(),
+#     "Gradient Boosting": GradientBoostingClassifier(),
+#     "Logistic Regression": LogisticRegression(),
+#     "Naive Bayes": GaussianNB(),
+# }
+
+# models = {
+#     # "Random Forest": RandomForestClassifier(),
+#     "Logistic Regression": LogisticRegression(),
+#     "Naive Bayes": GaussianNB(),
+# }
+# # Define parameter grids for each model
+# param_grids = {
+#     "Random Forest": {"n_estimators": [10, 50, 100], "max_depth": [None, 10, 20]},
+#     "Gradient Boosting": {
+#         "n_estimators": [10, 50, 100],
+#         "max_depth": [3, 5, 10],
+#         "learning_rate": [0.1, 0.01, 0.001],
+#     },
+#     "Logistic Regression": {"C": [0.1, 1, 10], "solver": ["liblinear", "lbfgs"]},
+#     "Naive Bayes": {}
+# }
+
+# Define parameter grids for each model
+# param_grids = {
+#     # "Random Forest": {"n_estimators": [10, 50, 100], "max_depth": [None, 10, 20]},
+#     "Logistic Regression": {"C": [0.1, 1, 10], "solver": ["liblinear", "lbfgs"]},
+#     "Naive Bayes": {},
+# }
+
+# # Initialize empty DataFrame to store results
+# results_df = pd.DataFrame(
+#     columns=["Model", "Feature Set", "Best Params", "Best Score", "Test Accuracy"]
+# )
 
 # --------------------------------------------------------------
 # Grid search for best hyperparameters and model selection
 # --------------------------------------------------------------
+
+# # Split data into training and validation sets
+# X_train_split, X_val, y_train_split, y_val = train_test_split(
+#     X_train_reduced, y_train, test_size=0.2, random_state=42
+# )
+# Define models
+models = {
+    "Logistic Regression": Pipeline(
+        [("scaler", StandardScaler()), ("model", LogisticRegression())]
+    ),
+    "Random Forest": RandomForestClassifier(),  # No standardization for Random Forest
+    "Naive Bayes": GaussianNB(),
+}
+
+# Define parameter grids for each model
+param_grids = {
+    "Logistic Regression": {
+        "model__C": [0.1, 1, 10],
+        "model__solver": ["liblinear", "lbfgs"],
+    },
+    "Random Forest": {"n_estimators": [10, 50, 100], "max_depth": [None, 10, 20]},
+    "Naive Bayes": {},
+}
+
+# Initialize empty DataFrame to store results
+results_df = pd.DataFrame(
+    columns=["Model", "Feature Set", "Best Params", "Best Score", "Validation Accuracy"]
+)
+
+# Initialize variables to track the best model and its performance
+best_model = None
+best_feature_set = None
+best_score = -1
+best_params = None
+
+# List to store all results
+results_list = []
+
+# Perform grid search for each model and feature set
+for model_name, model in models.items():
+    for feature_set_name, feature_set in feature_sets.items():
+
+        # Define grid search
+        grid_search = GridSearchCV(
+            model, param_grids[model_name], cv=5, scoring="accuracy"
+        )
+
+        # Fit grid search
+        grid_search.fit(X_train_reduced[feature_set], y_train)
+
+        # Store the best score and parameters
+        current_score = grid_search.best_score_
+        current_params = grid_search.best_params_
+
+        # Update best model
+        if current_score > best_score:
+            best_score = current_score
+            best_model = grid_search.best_estimator_
+            best_feature_set = feature_set_name
+            best_params = current_params
+
+        results_list.append(
+            {
+                "Model": model_name,
+                "Feature Set": feature_set_name,
+                "Best Params": current_params,
+                "Best Score": current_score,
+            }
+        )
+
+        # Print progress
+        print(f"Grid search for {model_name} with {feature_set_name} completed.")
+
+# Convert results list into a DataFrame
+results_df = pd.DataFrame(results_list)
+results_df_sorted = results_df.sort_values(by="Best Score", ascending=False)
+
+print(f"Best Model: {best_model}")
+print(f"Feature Set: {best_feature_set}")
+print(f"Best Params: {best_params}")
+print(f"Best Cross-Validation Score: {best_score}")
 
 
 # --------------------------------------------------------------
@@ -194,6 +463,12 @@ svc_cols = X_train_reduced.columns[svc_rfe.support_]
 # --------------------------------------------------------------
 # Select best model and evaluate results
 # --------------------------------------------------------------
+
+# # Evaluate the best model on the test set
+# X_test_best_feature_set = X_test_reduced[feature_sets[best_feature_set]]
+# y_test_pred = best_model.predict(X_test_best_feature_set)
+# test_accuracy = accuracy_score(y_test, y_test_pred)
+# print(f"Test Set Accuracy of the selected model: {test_accuracy}")
 
 
 # --------------------------------------------------------------
