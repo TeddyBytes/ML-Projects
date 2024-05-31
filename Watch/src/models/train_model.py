@@ -488,29 +488,3 @@ print(f"Best Model: {best_model}")
 print(f"Feature Set: {best_feature_set}")
 print(f"Best Params: {best_params}")
 print(f"Best Time Series Cross-Validation Score: {best_time_series_cv_score}")
-
-
-# --------------------------------------------------------------
-# Select best model and evaluate results
-# --------------------------------------------------------------
-
-# # Evaluate the best model on the test set
-# X_test_best_feature_set = X_test_reduced[feature_sets[best_feature_set]]
-# y_test_pred = best_model.predict(X_test_best_feature_set)
-# test_accuracy = accuracy_score(y_test, y_test_pred)
-# print(f"Test Set Accuracy of the selected model: {test_accuracy}")
-
-
-# --------------------------------------------------------------
-# Select train and test data based on participant
-# --------------------------------------------------------------
-
-
-# --------------------------------------------------------------
-# Use best model again and evaluate results
-# --------------------------------------------------------------
-
-
-# --------------------------------------------------------------
-# Try a simpler model with the selected features
-# --------------------------------------------------------------
