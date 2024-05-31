@@ -13,9 +13,20 @@ import seaborn as sns
 
 # Scikit-learn Components
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
-from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.model_selection import (
+    train_test_split,
+    GridSearchCV,
+    TimeSeriesSplit,
+    cross_val_score,
+)
 from sklearn.pipeline import Pipeline
-from sklearn.metrics import accuracy_score, confusion_matrix
+from sklearn.metrics import (
+    accuracy_score,
+    confusion_matrix,
+    roc_curve,
+    auc,
+    mean_squared_error,
+)
 from sklearn.feature_selection import SelectFromModel, RFE
 
 # Machine Learning Models
@@ -396,16 +407,18 @@ param_grids = {
     "Naive Bayes": {},
 }
 
+# Define the number of splits for Time Series Cross-Validation
+n_splits = 5
+
 # Initialize empty DataFrame to store results
 results_df = pd.DataFrame(
-    columns=["Model", "Feature Set", "Best Params", "Best Score", "Validation Accuracy"]
+    columns=["Model", "Feature Set", "Regular CV Score", "Time Series CV Score"]
 )
 
 # Initialize variables to track the best model and its performance
 best_model = None
 best_feature_set = None
-best_score = -1
-best_params = None
+best_time_series_cv_score = -1
 
 # List to store all results
 results_list = []
@@ -413,51 +426,68 @@ results_list = []
 # Perform grid search for each model and feature set
 for model_name, model in models.items():
     for feature_set_name, feature_set in feature_sets.items():
-
-        # Define grid search
-        grid_search = GridSearchCV(
-            model, param_grids[model_name], cv=5, scoring="accuracy"
+        # Regular Cross-Validation
+        regular_cv_scores = cross_val_score(
+            model,
+            X_train_reduced[feature_set],
+            y_train,
+            cv=5,  # You can adjust the number of folds as needed
+            scoring="accuracy",
         )
+        regular_cv_score = np.mean(regular_cv_scores)
 
-        # Fit grid search
-        grid_search.fit(X_train_reduced[feature_set], y_train)
+        # Time Series Cross-Validation
+        tscv = TimeSeriesSplit(n_splits=n_splits)
+        time_series_cv_scores = []
+        for train_index, val_index in tscv.split(X_train_reduced[feature_set]):
+            X_train_fold, X_val_fold = (
+                X_train_reduced[feature_set].iloc[train_index],
+                X_train_reduced[feature_set].iloc[val_index],
+            )
+            y_train_fold, y_val_fold = (
+                y_train.iloc[train_index],
+                y_train.iloc[val_index],
+            )
+            grid_search = GridSearchCV(
+                model, param_grids[model_name], cv=5, scoring="accuracy"
+            )
+            grid_search.fit(X_train_fold, y_train_fold)
+            time_series_cv_scores.append(grid_search.best_score_)
+        time_series_cv_score = np.mean(time_series_cv_scores)
 
-        # Store the best score and parameters
-        current_score = grid_search.best_score_
-        current_params = grid_search.best_params_
-
-        # Update best model
-        if current_score > best_score:
-            best_score = current_score
-            best_model = grid_search.best_estimator_
+        # Update best model based on Time Series CV score
+        if time_series_cv_score > best_time_series_cv_score:
+            best_time_series_cv_score = time_series_cv_score
+            best_model = model_name
             best_feature_set = feature_set_name
-            best_params = current_params
+            best_params = grid_search.best_params_
 
+        # Store results
         results_list.append(
             {
                 "Model": model_name,
                 "Feature Set": feature_set_name,
-                "Best Params": current_params,
-                "Best Score": current_score,
+                "Regular CV Score": regular_cv_score,
+                "Time Series CV Score": time_series_cv_score,
             }
         )
 
         # Print progress
-        print(f"Grid search for {model_name} with {feature_set_name} completed.")
+        print(
+            f"Model: {model_name}, Feature Set: {feature_set_name}, Regular CV Score: {regular_cv_score}, Time Series CV Score: {time_series_cv_score}"
+        )
 
 # Convert results list into a DataFrame
 results_df = pd.DataFrame(results_list)
-results_df_sorted = results_df.sort_values(by="Best Score", ascending=False)
 
+# Sort results by Time Series CV score
+results_df_sorted = results_df.sort_values(by="Time Series CV Score", ascending=False)
+
+# Display best model and its details
 print(f"Best Model: {best_model}")
 print(f"Feature Set: {best_feature_set}")
 print(f"Best Params: {best_params}")
-print(f"Best Cross-Validation Score: {best_score}")
-
-
-# --------------------------------------------------------------
-# Create a grouped bar plot to compare the results
-# --------------------------------------------------------------
+print(f"Best Time Series Cross-Validation Score: {best_time_series_cv_score}")
 
 
 # --------------------------------------------------------------
