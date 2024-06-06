@@ -1,0 +1,7 @@
+digraph G {
+	4698308912 [label="weight: 1"]
+	4698321152 [label="bias: 0.4"]
+	4698321056 [label="data: 2.4"]
+	4698308912 -> 4698321056 [label=weighted_sum]
+	4698321152 -> 4698321056 [label=weighted_sum]
+}

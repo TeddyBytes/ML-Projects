@@ -1,0 +1,16 @@
+digraph {
+	graph [rankdir=LR]
+	4701103168 [label="{ Bias | value [0.4] | grad 0.0000 }" shape=record]
+	4701101200 [label="{ Weights | value [ 0.5,-0.2, 0.1] | grad 0.0000 }" shape=record]
+	4701097696 [label="{ None | value 0.4000 | grad 0.0000 }" shape=record]
+	"4701097696mul" [label=mul]
+	"4701097696mul" -> 4701097696
+	4701094192 [label="{ Data | value [1.,2.,3.] | grad 0.0000 }" shape=record]
+	4701110176 [label="{ None | value [0.8] | grad 0.0000 }" shape=record]
+	"4701110176add" [label=add]
+	"4701110176add" -> 4701110176
+	4701101200 -> "4701097696mul"
+	4701103168 -> "4701110176add"
+	4701097696 -> "4701110176add"
+	4701094192 -> "4701097696mul"
+}
