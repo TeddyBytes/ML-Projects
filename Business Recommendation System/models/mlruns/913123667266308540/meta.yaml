@@ -1,0 +1,6 @@
+artifact_location: file:///Users/matthewaudley/Documents/Machine%20Learning%20Projects/Business%20Recommendation%20System/models/mlruns/913123667266308540
+creation_time: 1725761971522
+experiment_id: '913123667266308540'
+last_update_time: 1725761971522
+lifecycle_stage: active
+name: spark_ml_experiment

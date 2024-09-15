@@ -1,0 +1,15 @@
+artifact_uri: file:///Users/matthewaudley/Documents/Machine%20Learning%20Projects/Business%20Recommendation%20System/models/mlruns/626415025947552506/f1652dbed4014be7917abed652ec93fd/artifacts
+end_time: 1726022154439
+entry_point_name: ''
+experiment_id: '626415025947552506'
+lifecycle_stage: active
+run_id: f1652dbed4014be7917abed652ec93fd
+run_name: abundant-penguin-741
+run_uuid: f1652dbed4014be7917abed652ec93fd
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1726022154320
+status: 4
+tags: []
+user_id: matthewaudley

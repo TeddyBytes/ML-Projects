@@ -1,0 +1,15 @@
+artifact_uri: file:///Users/matthewaudley/Documents/Machine%20Learning%20Projects/Business%20Recommendation%20System/models/mlruns/626415025947552506/e8dcfaf7cb884e73a5ecb2ed1792b0af/artifacts
+end_time: 1726021274320
+entry_point_name: ''
+experiment_id: '626415025947552506'
+lifecycle_stage: active
+run_id: e8dcfaf7cb884e73a5ecb2ed1792b0af
+run_name: valuable-donkey-114
+run_uuid: e8dcfaf7cb884e73a5ecb2ed1792b0af
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1726021274314
+status: 4
+tags: []
+user_id: matthewaudley

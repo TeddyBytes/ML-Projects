@@ -1,0 +1,6 @@
+artifact_location: file:///Users/matthewaudley/Documents/Machine%20Learning%20Projects/Business%20Recommendation%20System/models/mlruns/349123929531322098
+creation_time: 1725777184587
+experiment_id: '349123929531322098'
+last_update_time: 1725777184587
+lifecycle_stage: active
+name: ALS_Hyperparameter_Tuning

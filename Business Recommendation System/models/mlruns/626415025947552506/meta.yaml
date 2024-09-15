@@ -1,0 +1,6 @@
+artifact_location: file:///Users/matthewaudley/Documents/Machine%20Learning%20Projects/Business%20Recommendation%20System/models/mlruns/626415025947552506
+creation_time: 1726021249687
+experiment_id: '626415025947552506'
+last_update_time: 1726021249687
+lifecycle_stage: active
+name: CF Initial Experiment

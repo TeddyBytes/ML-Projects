@@ -1,0 +1,15 @@
+artifact_uri: file:///Users/matthewaudley/Documents/Machine%20Learning%20Projects/Business%20Recommendation%20System/models/mlruns/626415025947552506/d5aeeae7c1674e1f8753aafd4b61ce35/artifacts
+end_time: 1726023942520
+entry_point_name: ''
+experiment_id: '626415025947552506'
+lifecycle_stage: active
+run_id: d5aeeae7c1674e1f8753aafd4b61ce35
+run_name: nosy-snail-448
+run_uuid: d5aeeae7c1674e1f8753aafd4b61ce35
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1726023574823
+status: 4
+tags: []
+user_id: matthewaudley

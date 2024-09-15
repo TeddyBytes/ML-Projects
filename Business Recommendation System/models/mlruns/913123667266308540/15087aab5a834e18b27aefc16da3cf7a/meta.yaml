@@ -1,0 +1,15 @@
+artifact_uri: file:///Users/matthewaudley/Documents/Machine%20Learning%20Projects/Business%20Recommendation%20System/models/mlruns/913123667266308540/15087aab5a834e18b27aefc16da3cf7a/artifacts
+end_time: 1725777017824
+entry_point_name: ''
+experiment_id: '913123667266308540'
+lifecycle_stage: active
+run_id: 15087aab5a834e18b27aefc16da3cf7a
+run_name: languid-fly-306
+run_uuid: 15087aab5a834e18b27aefc16da3cf7a
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1725777017816
+status: 4
+tags: []
+user_id: matthewaudley

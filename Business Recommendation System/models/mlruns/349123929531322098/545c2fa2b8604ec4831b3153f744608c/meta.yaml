@@ -1,0 +1,15 @@
+artifact_uri: file:///Users/matthewaudley/Documents/Machine%20Learning%20Projects/Business%20Recommendation%20System/models/mlruns/349123929531322098/545c2fa2b8604ec4831b3153f744608c/artifacts
+end_time: 1725777689622
+entry_point_name: ''
+experiment_id: '349123929531322098'
+lifecycle_stage: active
+run_id: 545c2fa2b8604ec4831b3153f744608c
+run_name: nosy-frog-527
+run_uuid: 545c2fa2b8604ec4831b3153f744608c
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1725777689613
+status: 4
+tags: []
+user_id: matthewaudley

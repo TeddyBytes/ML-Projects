@@ -1,0 +1,15 @@
+artifact_uri: file:///Users/matthewaudley/Documents/Machine%20Learning%20Projects/Business%20Recommendation%20System/models/mlruns/626415025947552506/7ed92e9a636f4dbc962bbcfac3902fe4/artifacts
+end_time: 1726024712747
+entry_point_name: ''
+experiment_id: '626415025947552506'
+lifecycle_stage: active
+run_id: 7ed92e9a636f4dbc962bbcfac3902fe4
+run_name: dazzling-ape-491
+run_uuid: 7ed92e9a636f4dbc962bbcfac3902fe4
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1726024355802
+status: 4
+tags: []
+user_id: matthewaudley

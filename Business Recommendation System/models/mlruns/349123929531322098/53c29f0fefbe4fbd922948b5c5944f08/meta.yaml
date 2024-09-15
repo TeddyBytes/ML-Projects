@@ -1,0 +1,15 @@
+artifact_uri: file:///Users/matthewaudley/Documents/Machine%20Learning%20Projects/Business%20Recommendation%20System/models/mlruns/349123929531322098/53c29f0fefbe4fbd922948b5c5944f08/artifacts
+end_time: 1725777652061
+entry_point_name: ''
+experiment_id: '349123929531322098'
+lifecycle_stage: active
+run_id: 53c29f0fefbe4fbd922948b5c5944f08
+run_name: efficient-dove-197
+run_uuid: 53c29f0fefbe4fbd922948b5c5944f08
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1725777652026
+status: 4
+tags: []
+user_id: matthewaudley

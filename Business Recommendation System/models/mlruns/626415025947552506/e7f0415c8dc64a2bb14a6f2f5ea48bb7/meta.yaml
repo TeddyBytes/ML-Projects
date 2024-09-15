@@ -1,0 +1,15 @@
+artifact_uri: file:///Users/matthewaudley/Documents/Machine%20Learning%20Projects/Business%20Recommendation%20System/models/mlruns/626415025947552506/e7f0415c8dc64a2bb14a6f2f5ea48bb7/artifacts
+end_time: 1726091140751
+entry_point_name: ''
+experiment_id: '626415025947552506'
+lifecycle_stage: active
+run_id: e7f0415c8dc64a2bb14a6f2f5ea48bb7
+run_name: intelligent-calf-717
+run_uuid: e7f0415c8dc64a2bb14a6f2f5ea48bb7
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1726091124812
+status: 4
+tags: []
+user_id: matthewaudley

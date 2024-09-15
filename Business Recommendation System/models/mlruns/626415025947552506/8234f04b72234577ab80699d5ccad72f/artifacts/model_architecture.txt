@@ -1,0 +1,5 @@
+MatrixFact(
+  (user_emb): Embedding(287116, 10)
+  (bus_emb): Embedding(113502, 10)
+  (fc1): Linear(in_features=1, out_features=1, bias=True)
+)

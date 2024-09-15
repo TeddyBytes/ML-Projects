@@ -1,0 +1,15 @@
+artifact_uri: file:///Users/matthewaudley/Documents/Machine%20Learning%20Projects/Business%20Recommendation%20System/models/mlruns/626415025947552506/dbf71d2f8af54034b993e3fa3d75b286/artifacts
+end_time: 1726023409504
+entry_point_name: ''
+experiment_id: '626415025947552506'
+lifecycle_stage: active
+run_id: dbf71d2f8af54034b993e3fa3d75b286
+run_name: polite-stag-677
+run_uuid: dbf71d2f8af54034b993e3fa3d75b286
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1726023282510
+status: 4
+tags: []
+user_id: matthewaudley

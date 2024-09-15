@@ -1,0 +1,15 @@
+artifact_uri: file:///Users/matthewaudley/Documents/Machine%20Learning%20Projects/Business%20Recommendation%20System/models/mlruns/349123929531322098/ae3d0f1c89874775ab809a94413233c8/artifacts
+end_time: 1725777696574
+entry_point_name: ''
+experiment_id: '349123929531322098'
+lifecycle_stage: active
+run_id: ae3d0f1c89874775ab809a94413233c8
+run_name: omniscient-fly-272
+run_uuid: ae3d0f1c89874775ab809a94413233c8
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1725777696477
+status: 4
+tags: []
+user_id: matthewaudley

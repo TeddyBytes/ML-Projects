@@ -1,0 +1,15 @@
+artifact_uri: file:///Users/matthewaudley/Documents/Machine%20Learning%20Projects/Business%20Recommendation%20System/models/mlruns/626415025947552506/8234f04b72234577ab80699d5ccad72f/artifacts
+end_time: 1726022169314
+entry_point_name: ''
+experiment_id: '626415025947552506'
+lifecycle_stage: active
+run_id: 8234f04b72234577ab80699d5ccad72f
+run_name: sedate-ant-979
+run_uuid: 8234f04b72234577ab80699d5ccad72f
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1726022169245
+status: 4
+tags: []
+user_id: matthewaudley

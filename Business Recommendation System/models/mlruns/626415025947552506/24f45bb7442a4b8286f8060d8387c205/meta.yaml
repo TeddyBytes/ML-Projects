@@ -1,0 +1,15 @@
+artifact_uri: file:///Users/matthewaudley/Documents/Machine%20Learning%20Projects/Business%20Recommendation%20System/models/mlruns/626415025947552506/24f45bb7442a4b8286f8060d8387c205/artifacts
+end_time: 1726021420768
+entry_point_name: ''
+experiment_id: '626415025947552506'
+lifecycle_stage: active
+run_id: 24f45bb7442a4b8286f8060d8387c205
+run_name: polite-mare-856
+run_uuid: 24f45bb7442a4b8286f8060d8387c205
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1726021300385
+status: 3
+tags: []
+user_id: matthewaudley
