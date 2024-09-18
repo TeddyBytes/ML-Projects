@@ -1,0 +1,36 @@
+{
+  "os": "macOS-14.5-arm64-arm-64bit",
+  "python": "3.12.3",
+  "startedAt": "2024-09-17T09:33:49.246377Z",
+  "program": "/Users/matthewaudley/Documents/Machine Learning Projects/Business Recommendation System/models/model.ipynb",
+  "git": {
+    "remote": "https://github.com/TeddyBytes/ML-Projects",
+    "commit": "bb777c4c3e4977b4a672703e942a1bb004f3e2f2"
+  },
+  "email": "matthew.audley@gmail.com",
+  "root": "/Users/matthewaudley/Documents/Machine Learning Projects/Business Recommendation System/models",
+  "host": "Matthews-MBP-3",
+  "username": "matthewaudley",
+  "executable": "/Users/matthewaudley/Documents/Machine Learning Projects/Business Recommendation System/brs/bin/python",
+  "codePathLocal": "model.ipynb",
+  "cpu_count": 10,
+  "cpu_count_logical": 10,
+  "disk": {
+    "/": {
+      "total": "994662584320",
+      "used": "750131642368"
+    }
+  },
+  "memory": {
+    "total": "17179869184"
+  },
+  "cpu": {
+    "count": 10,
+    "countLogical": 10
+  },
+  "gpuapple": {
+    "gpuType": "Apple M1 Pro",
+    "vendor": "sppci_vendor_Apple",
+    "cores": 16
+  }
+}
