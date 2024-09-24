@@ -3,55 +3,39 @@
 This repository contains a collection of my machine learning projects, covering a wide range of applications from natural language processing to image recognition and manual implementations of machine learning algorithms.
 
 ## Bigram
-- **Description:** A manual implementation of a bigram model.
+- **Description:** A manual implementation of a bigram model designed for character-level text generation. The model utilizes a heatmap to visualize the frequency of character pairs (bigrams) and includes sampling methods for generating new words based on learned probabilities.
 
 ## BioMed
-- **Description:** Built a model to detect health deficiencies using various preprocessing techniques and model evaluations.
-- **Summary:** 
-  - Logistic Regression performed well with standardization, but additional preprocessing slightly decreased performance.
-  - KNN showed significant improvements in all metrics with preprocessing.
-  - Decision Tree benefited from further preprocessing, while Random Forest maintained consistent results.
-  - Gradient Boosting, AdaBoost, SVM, and XGBoost models had minor fluctuations in performance, but generally underperformed compared to Logistic Regression and KNN.
-  - KNN imputation was preferred over mean/mode/median imputations due to better model performance.
+- **Description:** This project aims to compare the performance of various machine learning models on a dataset related to spinal disorders. The primary objective is to evaluate how different preprocessing techniques, particularly standardization, impact model performance.
 
 ## Business Recommendation System
-- **Description:** Developed a hybrid recommendation system on the Yelp dataset, integrating neural collaborative filtering and NLP for user review analysis.
-- **Features:**
-  - BERT tokenization and KMeans clustering for feature engineering.
-  - PCA for dimensionality reduction.
-  - Weights & Biases Sweeps for hyperparameter tuning and TensorBoard for training metrics analysis.
+- **Description:** This project implements a recommendation system using the Yelp dataset, combining collaborative filtering and content-based filtering methods. The model aims to predict user ratings for businesses based on user and business features, utilizing PyTorch for deep learning.
+
 
 ## CIFAR-10
 - **Description:** A basic model for detecting images on the CIFAR-10 dataset.
 
 ## GWhizGPT
-- **Description:** Developed a mini transformer language model (decoder only).
+- **Description:** GWhizGPT is a PyTorch implementation of a character-level language model inspired by the Transformer architecture. It is designed to generate text based on a provided corpus using attention mechanisms to capture contextual information.
 
 ## MLP
 - **Description:** Hardcoded a multi-layer perceptron.
 
 ## Manual_Backprop
-- **Description:** Manual implementation of backpropagation along the lines of Andrej Karpathy's makemore series.
+- **Description:** This project implements a Multi-Layer Perceptron (MLP) using PyTorch to predict the next character in a sequence of characters from a list of words. The model is trained on a dataset of names, demonstrating basic techniques in deep learning, including batch normalization and mini-batch training.
 
 ## Watch
-- **Description:** Built a fitness tracker using Scikit-learn, NumPy, and SciPy.
-- **Features:**
-  - Improved workout detection accuracy using advanced feature extraction (Fourier Transforms, PCA, and outlier detection).
-  - Developed an ML pipeline with ensemble methods, Grid Search, and Time Series Cross-Validation for optimal model selection.
+- **Description:** This project uses various machine learning models to classify exercises such as Bench Press, Overhead Press, and Deadlift based on sensor readings. The dataset is preprocessed to handle missing values, encode categorical features, and eliminate highly correlated features.
 
 ## Wavenet
-- **Description:** Language model based on Wavenet architecture with near copy-paste implementations of various layers, including Linear, BatchNorm1d, and Embedding.
+- **Description:** This project implements a WaveNet model as described in the 2016 DeepMind blog post. The model is designed to generate names based on character-level predictions using a neural network architecture.
 
 ## WizNet
-- **Description:** Manual implementation of a neural network called WizNet, including features like Sigmoid, ReLU, and Tanh activations.
-- **Features:**
-  - Includes visualization of backpropagation via the dot product, leveraging Karpathy's micrograd visualizations.
+- **Description:** WizNet is a lightweight implementation of a neural network framework, enabling easy experimentation with neural network parameters such as weights, biases, and activations. It features basic operations and backpropagation to compute gradients.
 
 ## Iris
-- **Description:** Image classification using the Iris dataset.
+- **Description:** This project implements a logistic regression model to classify the Iris flower species based on their sepal and petal measurements. The dataset used for this analysis is the famous Iris dataset.
 
-## Bigram (again)
-- **Description:** Another manual implementation of a bigram model.
 
 
 
