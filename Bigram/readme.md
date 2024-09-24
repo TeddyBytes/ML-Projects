@@ -33,4 +33,4 @@
 ### Usage
 - To utilize this bigram model, run the scripts provided in this repository, ensuring you have the necessary libraries installed (e.g., PyTorch, NumPy, Seaborn, and Matplotlib).
 
-Feel free to explore the code, test different inputs, and modify the training data to see how it affects the generated words!
+
