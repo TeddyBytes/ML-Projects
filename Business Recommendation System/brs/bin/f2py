@@ -1,5 +1,5 @@
 #!/bin/sh
-'''exec' "/Users/matthewaudley/Documents/Machine Learning Projects/Business Recommendation System/brs/bin/python3.12" "$0" "$@"
+'''exec' "/Users/matthewaudley/Documents/Machine Learning Projects/Business Recommendation System/brs/bin/python" "$0" "$@"
 ' '''
 # -*- coding: utf-8 -*-
 import re
