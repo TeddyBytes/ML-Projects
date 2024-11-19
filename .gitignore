@@ -11,3 +11,7 @@ __pycache__/
 
 # Mac system files
 .DS_Store
+
+# Ignore model files and logs
+Business Recommendation System/models/logs/
+Business Recommendation System/models/*.pt
