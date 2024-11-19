@@ -1,1 +1,13 @@
 .bash_profile
+# PyTorch model files
+*.pt
+
+# TensorFlow event logs
+events.out.tfevents.*
+
+# Python cache files
+__pycache__/
+*.pyc
+
+# Mac system files
+.DS_Store
